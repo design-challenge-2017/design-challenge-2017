@@ -43,7 +43,7 @@
 </style>
 <body>
   <div class='row'>
-    <div class='col-xs-8'>
+    <div class='col-xs-7'>
         <div id='map'>
 
         </div>
@@ -54,9 +54,9 @@
       </div>
     </div>
 
-    <div id='panel' class='col-xs-4'>
+    <div id='panel' class='col-xs-5'>
 
-      <h4 class='page-header'>Within <span class='slide-dynamic'></span> Minutes:</h4>
+      <h4 class='page-header'>Within <span class='slider-dynamic'>5</span> Minutes:</h4>
 
       <label>Number of Parcels: </label><span class='text-muted' id='numParcels-dynamic'></span><br  />
       <label>Number of Residential Parcels: </label><span class='text-muted' id='resParcels-dynamic'></span><br  />
@@ -176,7 +176,9 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
 
     function onIsoChronReceipt(isoGeojson){
       displayIsoLines(isoGeojson);
-      calcWithinIsoLines(isoGeojson, parcelGeojson);
+      pointsWithin = calcWithinIsoLines(isoGeojson, parcelGeojson);
+      stats = analyzeWithinIsoLines(pointsWithin)
+      displayStats(stats);
     }
 
     function displayIsoLines(isoGeojson){
@@ -189,6 +191,56 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
       return pointsWithin;
     }
 
+    function analyzeWithinIsoLines(pointsWithin){
+      stats = {
+        vacant: 0,
+        singleFamily: 0,
+        residential: 0,
+        total: 0,
+        agricultural: 0,
+        commercial: 0,
+        industrial: 0
+      }
+      for (var i = 0; i < pointsWithin.features.length; i++){
+        point = pointsWithin.features[i];
+        props = point.properties
+        stats.total += 1;
+        c = props.PropertyClass;
+        u = props.PropertyUse;
+
+        if (c == "Residential"){
+          stats.residential += 1;
+        }
+        if (c == "Commercial"){
+          stats.commercial += 1
+        }
+        if (c == "Industrial"){
+          stats.industrial += 1
+        }
+        if (c == "Agricultural"){
+          stats.agricultural += 1;
+        }
+        if (u == "Vacant"){
+          stats.vacant += 1
+        }
+        if (u == "Single Family"){
+          stats.singleFamily += 1
+        }
+      } //end loop
+      return stats;
+    }
+
+    function displayStats(stats){
+      $("#numParcels-dynamic").text(stats.total);
+      $("#resParcels-dynamic").text(stats.residential);
+      $("#sfParcels-dynamic").text(stats.singleFamily);
+      $("#vParcels-dynamic").text(stats.vacant);
+      $("#cParcels-dynamic").text(stats.commercial);
+      $("#iParcels-dynamic").text(stats.industrial);
+      $("#aParcels-dynamic").text(stats.agricultural);
+
+    }
+
 
     $("#theSlider").on('change', function(e){
       var val = $(this).val();
@@ -199,8 +251,6 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
           getIsoChronFromPos(currentLat, currentLng, isoTime, onIsoChronReceipt);
       }
     })
-
-
 }//end init
 
 
