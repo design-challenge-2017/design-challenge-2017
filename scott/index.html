@@ -18,6 +18,8 @@
     color: white;
   }
 
+
+
   #map{
     height: 90%;
     /*width: 75%;*/
@@ -36,10 +38,9 @@
     background-color: black;
   }
 
-  h1{
-    color: white;
+  .hightlight{
+    color: red!important;
   }
-
 </style>
 <body>
   <div class='row'>
@@ -56,15 +57,17 @@
 
     <div id='panel' class='col-xs-5'>
 
-      <h4 class='page-header'>Within <span class='slider-dynamic'>5</span> Minutes:</h4>
+      <h4 class='page-header'>Within <span class='slider-dynamic text-danger'>5</span> Minutes of <span class='address-dynamic text-danger'></span></h4>
 
-      <label>Number of Parcels: </label><span class='text-muted' id='numParcels-dynamic'></span><br  />
-      <label>Number of Residential Parcels: </label><span class='text-muted' id='resParcels-dynamic'></span><br  />
-      <label>Number of Single Family Parcels: </label><span class='text-muted' id='sfParcels-dynamic'></span><br  />
-      <label>Number of Vacant Parcels: </label><span class='text-muted' id='vParcels-dynamic'></span><br  />
-      <label>Number of Commericial Parcels: </label><span class='text-muted' id='cParcels-dynamic'></span><br  />
-      <label>Number of Industrial Parcels: </label><span class='text-muted' id='iParcels-dynamic'></span><br  />
-      <label>Number of Agricultural Parcels: </label><span class='text-muted' id='aParcels-dynamic'></span><br  />
+      <label>Number of Parcels: </label><span class='text-success' id='numParcels-dynamic'></span><br  />
+      <label>Number of Residential Parcels: </label><span class='text-success' id='resParcels-dynamic'></span><br  />
+      <label>Number of Single Family Parcels: </label><span class='text-success' id='sfParcels-dynamic'></span><br  />
+      <label>Number of Vacant Parcels: </label><span class='text-success' id='vParcels-dynamic'></span><br  />
+      <label>Number of Commericial Parcels: </label><span class='text-success' id='cParcels-dynamic'></span><br  />
+      <label>Number of Industrial Parcels: </label><span class='text-success' id='iParcels-dynamic'></span><br  />
+      <label>Number of Agricultural Parcels: </label><span class='text-success' id='aParcels-dynamic'></span><br  />
+      <hr />
+      <label>Mean Parcel Tax Value</label>
 
     </div>
 
@@ -139,12 +142,12 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
       onEachFeature: function(feature, layer){
         layer.on('click', function(e){
           coords = feature.geometry.coordinates
-          console.log(coords);
           var lat = coords[1];
           var lng = coords[0];
           var time = isoTime;
           var callback = onIsoChronReceipt;
           getIsoChronFromPos(lat, lng, time, callback);
+          changeAddress(feature);
         })
       }
     }).addTo(map);
@@ -154,6 +157,11 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
       parcelCentroids.addData(data);
       parcelGeojson = data;
     })
+
+    function changeAddress(feature){
+      address = feature.properties.Address;
+      $(".address-dynamic").text(address)
+    }
 
 
     function getIsoChronFromPos(lat, lng, time, callback){
