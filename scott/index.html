@@ -86,7 +86,6 @@
 
   <script>
   var f = "./centroids.json";
-  var chronMins = [5]
   var isochronHost = "http://matrix.mapzen.com/isochrone?"
   var mapzen_key = "mapzen-RsgxFds";
   var isoTime = 5;
@@ -120,8 +119,17 @@
     fillOpacity: 0.5
 };
 
+var isoMarkerOptions = {
+    "color": "darkred",
+    "fillColor": "red",
+    "fillOpacity": 0.25,
+    "weight": 1,
+    "opacity": 1
+};
+
+
 //map setup
-map = L.map('map').setView([43.0731, -89.5012], 12);
+map = L.map('map', {  zoomControl: false, }).setView([43.0731, -89.5012], 12);
 
 L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -136,7 +144,9 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
 
   function initialize(){
 
-    isochronLayer = L.geoJson().addTo(map);
+    isochronLayer = L.geoJson(null, {
+      style: isoMarkerOptions
+    }).addTo(map);
     parcelCentroids = L.geoJson(null, {
       pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, geojsonMarkerOptions);
