@@ -44,6 +44,7 @@
   var isoTime = 5;
   var isochronLayer;
   var parcelCentroids;
+  var parcelGeojson;
   var isochroneOptions = {
     locations: [{
       lat:0,
@@ -68,6 +69,15 @@
     fillOpacity: 0.8
 };
 
+//map setup
+map = L.map('map').setView([43.0731, -89.4012], 12);
+
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+//empty on init
+
   $(document).ready(function(){
       initialize()
   })
@@ -75,36 +85,29 @@
 
   function initialize(){
 
-    //map setup
-    map = L.map('map').setView([43.0731, -89.4012], 12);
-
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    isochronLayer = L.geoJson().addTo(map);
+    parcelCentroids = L.geoJson(null, {
+      pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+      },
+      onEachFeature: function(feature, layer){
+        layer.on('click', function(e){
+          coords = feature.geometry.coordinates
+          console.log(coords);
+          var lat = coords[1];
+          var lng = coords[0];
+          var time = isoTime;
+          var callback = onIsoChronReceipt;
+          getIsoChronFromPos(lat, lng, time, callback);
+        })
+      }
     }).addTo(map);
 
-    //empty on init
-    isochronLayer = L.geoJson().addTo(map);
-
-
-
-
     $.getJSON(f, function(data){
-        parcelCentroids = L.geoJson(data, {
-          pointToLayer: function (feature, latlng) {
-              return L.circleMarker(latlng, geojsonMarkerOptions);
-          },
-          onEachFeature(feature, layer) {
-              layer.on('click', function (e) {
-                lat = feature.geometry.coordinates[1];
-                lng = feature.geometry.coordinates[0];
-                time = isoTime;
-                callback = onIsoChronReceipt
-                getIsoChronFromPos(lat, lng, time, callback);
-              });
-          }
-        })
-        parcelCentroids.addTo(map);
-    }) //end get geojson
+      parcelCentroids.clearLayers();
+      parcelCentroids.addData(data);
+      parcelGeojson = data;
+    })
 
 
     function getIsoChronFromPos(lat, lng, time, callback){
@@ -115,7 +118,7 @@
 
         requestOptions = JSON.stringify(requestOptions);
 
-        var requestEndpoint = isochronHost + "json=" + requestOptions + "&id=walk_time_5mins&api_key=" + mapzen_key
+        var requestEndpoint = isochronHost + "json=" + requestOptions + "&id=walk_time_5mins&api_key=" + mapzen_key + "&polygons=true"
 
 
         $.getJSON(requestEndpoint, function(data){
@@ -125,7 +128,7 @@
 
     function onIsoChronReceipt(isoGeojson){
       displayIsoLines(isoGeojson);
-      calcWithinIsoLines(isoGeojson, parcelCentroids);
+      calcWithinIsoLines(isoGeojson, parcelGeojson);
     }
 
     function displayIsoLines(isoGeojson){
@@ -134,8 +137,8 @@
     }
 
     function calcWithinIsoLines(isoGeojson, points){
-      var pointsWithin = turf.count(points, isoGeojson);
-      console.log(pointsWithin);
+      var pointsWithin = turf.within(points, isoGeojson);
+      return pointsWithin;
     }
 
 
